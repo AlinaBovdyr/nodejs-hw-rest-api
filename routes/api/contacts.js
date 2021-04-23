@@ -4,7 +4,8 @@ const Contacts = require('../../model/contacts')
 const {
   validationCreateContact, 
   validationUpdateContact, 
-  validationUpdateStatusContact
+  validationUpdateStatusContact,
+  validationObjectId
 } = require('./validation')
 
 router.get('/', async (req, res, next) => {
@@ -20,9 +21,10 @@ router.get('/', async (req, res, next) => {
   } 
 })
 
-router.get('/:contactId', async (req, res, next) => {
+router.get('/:contactId', validationObjectId, async (req, res, next) => {
+  const { contactId } = req.params
   try {
-    const contact = await Contacts.getContactById(req.params.contactId)
+    const contact = await Contacts.getContactById(contactId)
     if (contact) {
       return res.json({
         status: 'success',
@@ -35,6 +37,7 @@ router.get('/:contactId', async (req, res, next) => {
       return res.status(404).json({
         status: 'error',
         code: 404,
+        message: `Not found any contact with id: ${contactId}`,
         data: 'Not Found',
       })
     }
@@ -49,16 +52,18 @@ router.post('/', validationCreateContact, async (req, res, next) => {
     return res.status(201).json({
       status: 'success',
       code: 201,
-      data: {contact},
+      data: { contact },
     })
+    
   } catch (err) {
     next(err)
   } 
 })
 
 router.delete('/:contactId', async (req, res, next) => {
+  const {contactId} = req.params
   try {
-    const contact = await Contacts.removeContact(req.params.contactId)
+    const contact = await Contacts.removeContact(contactId)
     if (contact) {
       return res.json({
         status: 'success',
@@ -71,6 +76,7 @@ router.delete('/:contactId', async (req, res, next) => {
       return res.status(404).json({
         status: 'error',
         code: 404,
+        message: `Not found any contact with id: ${contactId}`,
         data: 'Not Found',
       })
     }
@@ -80,8 +86,9 @@ router.delete('/:contactId', async (req, res, next) => {
 })
 
 router.put('/:contactId', validationUpdateContact, async (req, res, next) => {
+  const { contactId } = req.params
   try {
-    const contact = await Contacts.updateContact(req.params.contactId, req.body)
+    const contact = await Contacts.updateContact(contactId, req.body)
     if (contact) {
       return res.json({
         status: 'success',
@@ -94,6 +101,7 @@ router.put('/:contactId', validationUpdateContact, async (req, res, next) => {
       return res.status(404).json({
         status: 'error',
         code: 404,
+        message: `Not found any contact with id: ${contactId}`,
         data: 'Not Found',
       })
     }
@@ -103,8 +111,9 @@ router.put('/:contactId', validationUpdateContact, async (req, res, next) => {
 })
 
 router.patch('/:contactId/favorite', validationUpdateStatusContact, async (req, res, next) => {
+  const { contactId } = req.params
   try {
-    const contact = await Contacts.updateContact(req.params.contactId, req.body)
+    const contact = await Contacts.updateContact(contactId, req.body)
     if (contact) {
       return res.json({
         status: 'success',
@@ -117,6 +126,7 @@ router.patch('/:contactId/favorite', validationUpdateStatusContact, async (req, 
       return res.status(404).json({
         status: 'error',
         code: 404,
+        message: `Not found any contact with id: ${contactId}`,
         data: 'Not Found',
       })
     }
