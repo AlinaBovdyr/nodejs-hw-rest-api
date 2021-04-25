@@ -7,11 +7,11 @@ const getContactById = async (contactId) => await Contacts.findById(contactId)
 const removeContact = async (contactId) => await Contacts.findByIdAndRemove(contactId)
 
 const addContact = async (body) => {
-  const contacts = await Contacts.find()
-  const existedContact = contacts.some(({ name }) => name === body.name)
+  const {name} = body
+  const existedContact = await Contacts.findOne({name})
     
   if (existedContact) {
-    throw new Error(`The contact with name ${body.name} is exist`)
+    throw new Error(`The contact with name ${name} is exist`)
   }
   
   return await Contacts.create(body)

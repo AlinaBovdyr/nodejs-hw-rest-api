@@ -27,7 +27,7 @@ contactSchema.path('name').validate((value) => {
 })
 
 contactSchema.path('email').validate((value) => {
-  return /([a-z0-9_\.-]+)@([a-z0-9_\.-]+)\.([a-z\.]{2,6})/.test(String(value)) // eslint-disable-line
+  return /([a-z0-9_\.-]+)@([a-z0-9_\.-]+)\.([a-z\.]{2,6})/.test(String(value)) 
 })
 
 contactSchema.path('phone').validate((value) => {
