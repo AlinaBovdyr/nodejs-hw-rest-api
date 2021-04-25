@@ -12,4 +12,5 @@ module.exports = {
     'comma-dangle': 'off',
     'space-before-function-paren': 'off',
   },
+  "no-invalid-regexp": ["error", { "allowConstructorFlags": ["s"] }],
 }
