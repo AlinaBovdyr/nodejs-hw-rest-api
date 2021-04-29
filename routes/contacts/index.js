@@ -9,6 +9,7 @@ const {
   updateStatus
 } = require('../../controllers/contacts')
 const {
+  validationQueryContact,
   validationCreateContact, 
   validationUpdateContact, 
   validationUpdateStatusContact,
@@ -17,7 +18,7 @@ const {
 const guard = require('../../helpers/guard')
 
 router
-  .get('/', guard, getAll)
+  .get('/', guard, validationQueryContact, getAll)
   .post('/', guard, validationCreateContact, create)
 
 router
