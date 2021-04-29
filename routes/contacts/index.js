@@ -14,16 +14,17 @@ const {
   validationUpdateStatusContact,
   validationObjectId
 } = require('./validation')
+const guard = require('../../helpers/guard')
 
 router
-  .get('/', getAll)
-  .post('/', validationCreateContact, create)
+  .get('/', guard, getAll)
+  .post('/', guard, validationCreateContact, create)
 
 router
-  .get('/:contactId', validationObjectId, getById)
-  .put('/:contactId', validationUpdateContact, update)
+  .get('/:contactId', guard, validationObjectId, getById)
+  .put('/:contactId', guard, validationUpdateContact, update)
   .delete('/:contactId', remove)
 
-router.patch('/:contactId/favorite', validationUpdateStatusContact, updateStatus)
+router.patch('/:contactId/favorite', guard, validationUpdateStatusContact, updateStatus)
 
 module.exports = router

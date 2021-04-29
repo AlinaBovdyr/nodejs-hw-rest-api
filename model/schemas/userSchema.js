@@ -14,6 +14,10 @@ const userSchema = new Schema(
         type: String,
         required: [true, 'Email is required'],
         unique: true,
+        validate(value) {
+            const re = /([a-z0-9_\.-]+)@([a-z0-9_\.-]+)\.([a-z\.]{2,6})/
+            return re.test(String(value).toLowerCase())
+        },
     },
     subscription: {
         type: String,

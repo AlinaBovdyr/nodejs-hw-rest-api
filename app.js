@@ -3,6 +3,7 @@ const logger = require('morgan')
 const cors = require('cors')
 
 const contactsRouter = require('./routes/contacts')
+const usersRouter = require('./routes/users')
 
 const app = express()
 
@@ -17,13 +18,13 @@ app.use(cors({
   }))
 app.use(express.json())
 
+app.use('/api/users', usersRouter)
 app.use('/api/contacts', contactsRouter)
 
 app.use((_, res, __) => {
   res.status(404).json({
     status: 'error',
     code: 404,
-    message: 'Use api on routes: /api/contacts',
     data: 'Not found',
   })
 })
