@@ -1,14 +1,6 @@
-const express = require('express')
-const router = express.Router()
-const Contacts = require('../../model/contacts')
-const {
-  validationCreateContact, 
-  validationUpdateContact, 
-  validationUpdateStatusContact,
-  validationObjectId
-} = require('./validation')
+const Contacts = require('../model/contacts')
 
-router.get('/', async (req, res, next) => {
+const getAll = async (req, res, next) => {
   try {
     const contacts = await Contacts.listContacts()
     return res.json({
@@ -19,9 +11,9 @@ router.get('/', async (req, res, next) => {
   } catch (err) {
     next(err)
   } 
-})
+}
 
-router.get('/:contactId', validationObjectId, async (req, res, next) => {
+const getById = async (req, res, next) => {
   const { contactId } = req.params
   try {
     const contact = await Contacts.getContactById(contactId)
@@ -44,9 +36,9 @@ router.get('/:contactId', validationObjectId, async (req, res, next) => {
   } catch (e) {
     next(e)
   }
-})
+}
 
-router.post('/', validationCreateContact, async (req, res, next) => {
+const create = async (req, res, next) => {
   try {
     const contact = await Contacts.addContact(req.body)
     return res.status(201).json({
@@ -58,9 +50,9 @@ router.post('/', validationCreateContact, async (req, res, next) => {
   } catch (err) {
     next(err)
   } 
-})
+}
 
-router.delete('/:contactId', async (req, res, next) => {
+const remove = async (req, res, next) => {
   const {contactId} = req.params
   try {
     const contact = await Contacts.removeContact(contactId)
@@ -83,9 +75,9 @@ router.delete('/:contactId', async (req, res, next) => {
   } catch (e) {
     next(e)
   }
-})
+}
 
-router.put('/:contactId', validationUpdateContact, async (req, res, next) => {
+const update = async (req, res, next) => {
   const { contactId } = req.params
   try {
     const contact = await Contacts.updateContact(contactId, req.body)
@@ -108,9 +100,9 @@ router.put('/:contactId', validationUpdateContact, async (req, res, next) => {
   } catch (e) {
     next(e)
   }
-})
+}
 
-router.patch('/:contactId/favorite', validationUpdateStatusContact, async (req, res, next) => {
+const updateStatus = async (req, res, next) => {
   const { contactId } = req.params
   try {
     const contact = await Contacts.updateContact(contactId, req.body)
@@ -133,6 +125,13 @@ router.patch('/:contactId/favorite', validationUpdateStatusContact, async (req, 
   } catch (e) {
     next(e)
   }
-})
+}
 
-module.exports = router
+module.exports = {
+    getAll,
+    getById,
+    create,
+    remove,
+    update,
+    updateStatus
+}
