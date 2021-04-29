@@ -25,7 +25,6 @@ const registration = async (req, res, next) => {
             code: HttpCode.CREATED,
             data: {
                 user: {
-                    id: newUser.id,
                     email: newUser.email,
                     subscription: newUser.subscription
                 }
@@ -71,8 +70,35 @@ const logout = async (req, res, next) => {
     return res.status(HttpCode.NO_CONTENT).json({})
 }
 
+const getCurrent = async (req, res, next) => {
+    const id = req.user.id
+    try {
+        const user = await Users.getUserById(id)
+        if (user) {
+        return res.status(HttpCode.OK).json({
+            status: 'success',
+            code: HttpCode.OK,
+            data: {
+                email: user.email,
+                subscription: user.subscription
+            },
+        })
+        } else {
+            return res.status(HttpCode.NOT_FOUND).json({
+                status: 'error',
+                code: HttpCode.NOT_FOUND,
+                message: `Not found any contact with id: ${id}`,
+                data: 'Not Found',
+            })
+        }
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     registration,
     login,
-    logout
+    logout,
+    getCurrent
 }
