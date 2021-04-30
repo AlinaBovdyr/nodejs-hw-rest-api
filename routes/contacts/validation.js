@@ -1,6 +1,16 @@
 const Joi = require('joi')
 const mongoose = require('mongoose')
 
+const schemaQueryContact = Joi.object({
+  sortBy: Joi.string().valid('name', 'phone').optional(),
+  sortByDesc: Joi.string().valid('name', 'phone').optional(),
+  filter: Joi.string().optional(),
+  limit: Joi.number().integer().min(1).max(50).optional(),
+  page: Joi.number().integer().min(1).max(50).optional(),
+  offset: Joi.number().integer().min(0).optional(),
+  favorite: Joi.boolean().optional(),
+}).without('sortBy', 'sortByDesc')
+
 const schemaAddContact = Joi.object({
   name: Joi.string().min(3).max(30).required(),
   email: Joi.string().pattern(/^([a-z0-9_\.-]+)@([a-z0-9_\.-]+)\.([a-z\.]{2,6})$/).optional(),
@@ -37,6 +47,9 @@ const validate = async (schema, obj, next) => {
 }
 
 module.exports = {
+  validationQueryContact: async (req, res, next) => {
+    return await validate(schemaQueryContact, req.query, next)
+  },
   validationCreateContact: async (req, res, next) => {
     return await validate(schemaAddContact, req.body, next)
   },

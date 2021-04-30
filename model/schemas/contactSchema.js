@@ -1,5 +1,6 @@
+const mongoosePaginate = require('mongoose-paginate-v2')
 const mongoose = require('mongoose')
-const { Schema, model } = mongoose
+const { Schema, model, SchemaTypes } = mongoose
 
 const contactSchema = new Schema(
   {
@@ -18,6 +19,10 @@ const contactSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    owner: {
+      type: SchemaTypes.ObjectId,
+      ref: 'user',
+    }
   },
   { timestamps: true },
 )
@@ -33,6 +38,8 @@ contactSchema.path('email').validate((value) => {
 contactSchema.path('phone').validate((value) => {
   return /[(][0-9]{3}[)][\s][0-9]{3}[-][0-9]{4}/.test(String(value))
 })
+
+contactSchema.plugin(mongoosePaginate)
 
 const Contact = model('contact', contactSchema)
 
