@@ -1,4 +1,7 @@
 const jwt = require('jsonwebtoken')
+const jimp = require('jimp')
+const path = require('path')
+const fs = require('fs/promises')
 const User = require('../model/schemas/userSchema')
 const Users = require('../model/users')
 const HttpCode = require('../helpers/constants')
@@ -26,7 +29,8 @@ const registration = async (req, res, next) => {
             data: {
                 user: {
                     email: newUser.email,
-                    subscription: newUser.subscription
+                    subscription: newUser.subscription,
+                    avatarURL: newUser.avatarURL
                 }
             }
         })
@@ -58,7 +62,8 @@ const login = async (req, res, next) => {
             token,
             user: {
                 email: user.email,
-                subscription: user.subscription
+                subscription: user.subscription,
+                avatarURL: user.avatarURL
             }
         }
     })
@@ -80,7 +85,8 @@ const getCurrent = async (req, res, next) => {
             code: HttpCode.OK,
             data: {
                 email: user.email,
-                subscription: user.subscription
+                subscription: user.subscription,
+                avatarURL: user.avatarURL
             },
         })
         } else {
@@ -96,9 +102,49 @@ const getCurrent = async (req, res, next) => {
     }
 }
 
+const updateAvatar = async (req, res, next) => {
+    const { id } = req.user
+    const avatarURL = await saveAvatarUser(req)
+    await Users.updateAvatar(id, avatarURL)
+
+    return res.status(HttpCode.OK).json({
+        status: 'success',
+        code: HttpCode.OK,
+        data: { avatarURL },
+    })
+}
+
+const saveAvatarUser = async (req) => {
+    const FOLDER_AVATARS = process.env.FOLDER_AVATARS
+    const pathFile = req.file.path
+    const newAvatarName = `${Date.now().toString()}-${req.file.originalname}`
+    const tmp = await jimp.read(pathFile)
+
+    await tmp
+        .autocrop()
+        .cover(250, 250, jimp.HORIZONTAL_ALIGN_CENTER | jimp.VERTICAL_ALIGN_MIDDLE)
+        .writeAsync(pathFile)
+    try {
+        await fs.rename(
+            pathFile,
+            path.join(process.cwd(), 'public', FOLDER_AVATARS, newAvatarName)
+        )
+    } catch (e) {
+        console.log(e.message);
+    }
+
+    const oldAvatar = req.user.avatarURL
+    if (oldAvatar.includes(`${FOLDER_AVATARS}/`)) {
+        await fs.unlink(path.join(process.cwd(), 'public', oldAvatar))
+    }
+
+    return path.join(FOLDER_AVATARS, newAvatarName).replace('\\', '/')
+}
+
 module.exports = {
     registration,
     login,
     logout,
-    getCurrent
+    getCurrent,
+    updateAvatar
 }
