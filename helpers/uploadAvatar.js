@@ -15,12 +15,16 @@ const storage = multer.diskStorage({
 const upload = multer({ 
     storage: storage, 
     limits: {fileSize: 2000000}, 
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.includes('image')) {
-            cb(null, true)
-        }
-            cb(null, false)
+  fileFilter: (req, file, cb) => {
+      if (file.mimetype.includes('image')) {
+        cb(null, true)
+        return
+      }
+        const err = new Error('The download file is not an image')
+        err.status = 400
+        cb(err)
     }
+    
 })
 
 module.exports = upload

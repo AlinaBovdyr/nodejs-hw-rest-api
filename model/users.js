@@ -9,7 +9,10 @@ const addUser = async (userOptions) => {
 }
 
 const updateToken = async (id, token) => await User.updateOne({ _id: id }, { token })
-const updateAvatar = async (id, avatar) => await User.updateOne({ _id: id }, { avatarURL: avatar })
+const updateAvatar = async (id, avatar, idCloudAvatar = null) => await User.updateOne(
+    { _id: id },
+    { avatarURL: avatar, idCloudAvatar }
+)
 
 module.exports = {
     getUserById,
