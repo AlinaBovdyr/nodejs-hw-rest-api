@@ -114,8 +114,10 @@ const getCurrent = async (req, res, next) => {
 
 const updateAvatar = async (req, res, next) => {
     const { id } = req.user
+    
     // const avatarURL = await saveAvatarUser(req)
     // await Users.updateAvatar(id, avatarURL)
+
     const { idCloudAvatar, avatarURL } = await saveAvatarToCloud(req)
     await Users.updateAvatar(id, avatarURL, idCloudAvatar)
 

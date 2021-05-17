@@ -32,7 +32,8 @@ const listContacts = async (userId, query) => {
     },
   })
 
-  return results
+  const { docs: contacts, totalDocs: total } = results
+  return { contacts, total, limit, offset }
 }
 
 const getContactById = async (userId, contactId) => {
