@@ -23,8 +23,8 @@ router
 
 router
   .get('/:contactId', guard, validationObjectId, getById)
-  .put('/:contactId', guard, validationUpdateContact, update)
-  .delete('/:contactId', remove)
+  .put('/:contactId', guard, validationObjectId, validationUpdateContact, update)
+  .delete('/:contactId', validationObjectId, remove)
 
 router.patch('/:contactId/favorite', guard, validationUpdateStatusContact, updateStatus)
 
