@@ -45,6 +45,19 @@ class EmailService {
         const emailBody = mailGenerator.generate(email)
         return emailBody
     }
+
+    async sendVerifyEmail(verifyToken, email, name) {
+        this.#sender.setApiKey(process.env.SENDGRID_API_KEY)
+
+        const msg = {
+        to: email,
+        from: 'Sender из SendGrid -> Sender Management -> System contacts -> from email',
+        subject: 'Verify email',
+        html: this.#createTemplateVerifyEmail(verifyToken, name),
+        }
+
+        this.#sender.send(msg)
+    }
 }
 
 module.exports = EmailService

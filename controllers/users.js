@@ -7,6 +7,8 @@ const { promisify } = require('util')
 
 const Users = require('../model/users')
 const HttpCode = require('../helpers/constants')
+const EmailService = require('../services/email')
+const User = require('../model/schemas/userSchema')
 
 require('dotenv').config()
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY
@@ -20,8 +22,7 @@ cloudinary.config({
 const uploadToCloud = promisify(cloudinary.uploader.upload)
 
 const registration = async (req, res, next) => {
-    const { email } = req.body
-    const user = await Users.getUserByEmail(email)
+    const user = await Users.getUserByEmail(req.body.email)
 
     if (user) {
         return res.status(HttpCode.CONFLICT).json({
@@ -33,14 +34,26 @@ const registration = async (req, res, next) => {
 
     try {
         const newUser = await Users.addUser(req.body)
+        const { name, email, subscription, avatarURL, verifyToken } = newUser
+        
+        try {
+            const emailService = new EmailService(process.env.NODE_ENV)
+            await emailService.sendVerifyEmail(verifyToken, email, name)
+            
+        } catch (e) {
+            //logger
+            console.log(e.message);
+        }
+
         return res.status(HttpCode.CREATED).json({
             status: 'success',
             code: HttpCode.CREATED,
             data: {
                 user: {
-                    email: newUser.email,
-                    subscription: newUser.subscription,
-                    avatarURL: newUser.avatarURL
+                    name,
+                    email,
+                    subscription,
+                    avatarURL
                 }
             }
         })
@@ -54,7 +67,7 @@ const login = async (req, res, next) => {
     const user = await Users.getUserByEmail(email)
     const isValidPassword = await user?.validPassword(password)
 
-    if (!user || !isValidPassword) {
+    if (!user || !isValidPassword || !user.verify) {
         return res.status(HttpCode.UNAUTHORIZED).json({
             status: 'error',
             code: HttpCode.UNAUTHORIZED,
@@ -65,15 +78,18 @@ const login = async (req, res, next) => {
     const payload = { id: user.id }
     const token = jwt.sign(payload, JWT_SECRET_KEY, { expiresIn: '3h' })
     await Users.updateToken(user.id, token)
+    const { name, email, subscription, avatarURL } = user
+
     return res.status(HttpCode.OK).json({
         status: 'success',
         code: HttpCode.OK,
         data: {
             token,
             user: {
-                email: user.email,
-                subscription: user.subscription,
-                avatarURL: user.avatarURL
+                name,
+                email,
+                subscription,
+                avatarURL
             }
         }
     })
@@ -90,14 +106,17 @@ const getCurrent = async (req, res, next) => {
     try {
         const user = await Users.getUserById(id)
         if (user) {
-        return res.status(HttpCode.OK).json({
-            status: 'success',
-            code: HttpCode.OK,
-            data: {
-                email: user.email,
-                subscription: user.subscription,
-                avatarURL: user.avatarURL
-            },
+            const { name, email, subscription, avatarURL, verify } = user
+            return res.status(HttpCode.OK).json({
+                status: 'success',
+                code: HttpCode.OK,
+                data: {
+                    name,
+                    email,
+                    subscription,
+                    avatarURL,
+                    verify
+                },
         })
         } else {
             return res.status(HttpCode.NOT_FOUND).json({
@@ -170,10 +189,59 @@ const saveAvatarToCloud = async (req) => {
     return {idCloudAvatar, avatarURL}
 }
 
+const verify = async (req, res, next) => {
+    try {
+        const user = await Users.getUserByVerifyToken(req.params.token)
+        if (user) {
+            await Users.updateVerifyToken(user.id, true, null)
+            return res.status(HttpCode.OK).json({
+                status: 'success',
+                code: HttpCode.OK,
+                data: {message: 'Verification successful'},
+            })
+        }
+        return res.status(HttpCode.NOT_FOUND).json({
+                status: 'error',
+                code: HttpCode.NOT_FOUND,
+                message: 'User not found',
+                data: 'Not Found',
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+const repeatVerifyEmail = async (req, res, next) => {
+    try {
+        const user = await Users.getUserByEmail(req.body.email)
+        if (user) {
+            const { name, email, verifyToken } = user
+            const emailService = new EmailService(process.env.NODE_ENV)
+            await emailService.sendVerifyEmail(verifyToken, email, name)
+
+            return res.status(HttpCode.OK).json({
+                status: 'success',
+                code: HttpCode.OK,
+                data: {message: 'Verification email sent'},
+            })
+        }
+        return res.status(HttpCode.NOT_FOUND).json({
+                status: 'error',
+                code: HttpCode.NOT_FOUND,
+                message: 'User not found',
+                data: 'Not Found',
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 module.exports = {
     registration,
     login,
     logout,
     getCurrent,
-    updateAvatar
+    updateAvatar,
+    verify,
+    repeatVerifyEmail
 }

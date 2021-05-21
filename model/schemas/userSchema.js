@@ -21,6 +21,10 @@ const userSchema = new Schema(
             return re.test(String(value).toLowerCase())
         },
     },
+    name: {
+        type: String,
+        default: 'Guest',
+    },
     subscription: {
         type: String,
         enum: ["starter", "pro", "business"],
