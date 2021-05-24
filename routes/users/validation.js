@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const schemaUserData = Joi.object({
     email: Joi.string().pattern(/^([a-z0-9_\.-]+)@([a-z0-9_\.-]+)\.([a-z\.]{2,6})$/).required(),
     password: Joi.string().pattern(/^[a-zA-Z0-9]{7,20}$/).required(),
+    name: Joi.string().min(2).max(30).optional(),
 })
 
 const validate = async (schema, obj, next) => {

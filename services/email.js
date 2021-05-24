@@ -1,9 +1,21 @@
-const sendgrid = require('@sendgrid/mail')
+// const sendgrid = require('@sendgrid/mail')
+const nodemailer = require('nodemailer')
 const Mailgen = require('mailgen')
 require('dotenv').config()
 
+const config = {
+  host: 'smtp.meta.ua',
+  port: 465,
+  secure: true,
+  auth: {
+    user: 'alinabovdyr@meta.ua',
+    pass: process.env.NODEMAILER_PASSWORD,
+  },
+}
+
 class EmailService {
-    #sender = sendgrid
+    // #sender = sendgrid
+    #sender = nodemailer
     #GenerateTemplate = Mailgen
     constructor(env) {
         switch (env) {
@@ -47,17 +59,32 @@ class EmailService {
     }
 
     async sendVerifyEmail(verifyToken, email, name) {
-        this.#sender.setApiKey(process.env.SENDGRID_API_KEY)
-
-        const msg = {
-        to: email,
-        from: 'Sender из SendGrid -> Sender Management -> System contacts -> from email',
-        subject: 'Verify email',
-        html: this.#createTemplateVerifyEmail(verifyToken, name),
+        const transporter = this.#sender.createTransport(config)
+        const emailOptions = {
+            from: 'alinabovdyr@meta.ua',
+            to: email,
+            subject: 'Verify email',
+            html: this.#createTemplateVerifyEmail(verifyToken, name),
         }
 
-        this.#sender.send(msg)
+        transporter
+            .sendMail(emailOptions)
+            .then((info) => console.log(info))
+            .catch((err) => console.log(err))
     }
+
+    // async sendVerifyEmail(verifyToken, email, name) {
+    //     this.#sender.setApiKey(process.env.SENDGRID_API_KEY)
+
+    //     const msg = {
+    //     to: email,
+    //     from: 'Sender из SendGrid -> Sender Management -> System contacts -> from email',
+    //     subject: 'Verify email',
+    //     html: this.#createTemplateVerifyEmail(verifyToken, name),
+    //     }
+
+    //     this.#sender.send(msg)
+    // }
 }
 
 module.exports = EmailService

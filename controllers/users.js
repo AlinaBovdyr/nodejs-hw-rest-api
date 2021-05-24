@@ -8,7 +8,6 @@ const { promisify } = require('util')
 const Users = require('../model/users')
 const HttpCode = require('../helpers/constants')
 const EmailService = require('../services/email')
-const User = require('../model/schemas/userSchema')
 
 require('dotenv').config()
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY
@@ -34,7 +33,7 @@ const registration = async (req, res, next) => {
 
     try {
         const newUser = await Users.addUser(req.body)
-        const { name, email, subscription, avatarURL, verifyToken } = newUser
+        const { id, name, email, subscription, avatarURL, verifyToken } = newUser
         
         try {
             const emailService = new EmailService(process.env.NODE_ENV)
@@ -50,6 +49,7 @@ const registration = async (req, res, next) => {
             code: HttpCode.CREATED,
             data: {
                 user: {
+                    id,
                     name,
                     email,
                     subscription,
@@ -63,15 +63,22 @@ const registration = async (req, res, next) => {
 }
 
 const login = async (req, res, next) => {
-    const { email, password } = req.body
-    const user = await Users.getUserByEmail(email)
-    const isValidPassword = await user?.validPassword(password)
+    const user = await Users.getUserByEmail(req.body.email)
+    const isValidPassword = await user?.validPassword(req.body.password)
 
-    if (!user || !isValidPassword || !user.verify) {
+    if (!user || !isValidPassword) {
         return res.status(HttpCode.UNAUTHORIZED).json({
             status: 'error',
             code: HttpCode.UNAUTHORIZED,
             message: 'Email or password is wrong'
+        })
+    }
+
+    if (!user.verify) {
+         return res.status(HttpCode.UNAUTHORIZED).json({
+            status: 'error',
+            code: HttpCode.UNAUTHORIZED,
+            message: 'Email not verified'
         })
     }
 
@@ -191,7 +198,9 @@ const saveAvatarToCloud = async (req) => {
 
 const verify = async (req, res, next) => {
     try {
-        const user = await Users.getUserByVerifyToken(req.params.token)
+        console.log(req.params);
+        const user = await Users.getUserByVerifyToken(req.params.verificationToken)
+
         if (user) {
             await Users.updateVerifyToken(user.id, true, null)
             return res.status(HttpCode.OK).json({
@@ -200,11 +209,10 @@ const verify = async (req, res, next) => {
                 data: {message: 'Verification successful'},
             })
         }
-        return res.status(HttpCode.NOT_FOUND).json({
+        return res.status(HttpCode.BAD_REQUEST).json({
                 status: 'error',
-                code: HttpCode.NOT_FOUND,
-                message: 'User not found',
-                data: 'Not Found',
+                code: HttpCode.BAD_REQUEST,
+                message: 'Verification has already been passed',
         })
     } catch (error) {
         next(error)
